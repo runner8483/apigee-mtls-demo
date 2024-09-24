@@ -1,0 +1,14 @@
+{
+  "errorDetails": [
+    {
+      "message": "Exception message example",
+      "code": "ERR_01",
+      "httpCode": "400"
+    },
+    {
+      "message": "Exception message example 2",
+      "code": "ERR_02",
+      "httpCode": "401"
+    }
+  ]
+}

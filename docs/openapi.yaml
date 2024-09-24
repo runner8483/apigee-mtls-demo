@@ -1,0 +1,46 @@
+openapi: 3.1.0
+info:
+  title: mTLS Demo API
+  description: API que implementa mTLS con un método GET de prueba.
+  version: 1.0.0
+  contact: 
+    name: Organización Terpel
+    email: teamAPI@terpel.com
+    url: https://www.terpel.com
+servers:
+  - url: https://localhost:8443
+    description: Servidor local de la API con mTLS habilitado
+tags:
+  - name: Test
+    description: Hello World 
+paths:
+  /test:
+    get:
+      tags:
+        - Test
+      summary: Devuelve un saludo seguro
+      description: Endpoint que retorna un saludo cuando la autenticación mTLS es exitosa.
+      operationId: getHello
+      responses:
+        '200':
+          description: Operación exitosa
+          content:
+            application/json:
+              schema:
+                type: string
+                example: Hello, secure world with mTLS!
+        '401':
+          description: No autorizado
+        '403':
+          description: Certificado del cliente no válido
+        '500':
+          description: Error en el servidor
+components:
+  securitySchemes:
+    MutualTLS:
+      type: mutualTLS
+      description: |
+        Este servicio requiere autenticación mTLS, lo que implica que tanto el cliente como el servidor deben presentar certificados válidos para establecer la comunicación.
+
+security:
+  - MutualTLS: []

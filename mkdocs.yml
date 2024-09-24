@@ -1,0 +1,9 @@
+site_name: 'ms-ventas-experiencia'
+
+nav:
+  - Home: index.md
+  - Errors: Errors.md
+  - Exceptions: Exceptions.md
+
+plugins:
+  - techdocs-core
