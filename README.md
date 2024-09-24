@@ -126,7 +126,7 @@ sequenceDiagram
 - Realizar las pruebas de conexión desde Postman o CURL para validar los
   requerimientos de autenticación entre las partes.
 
-## Crear los certificados necesarios para intercambiar entre las partes**
+## Crear los certificados necesarios para intercambiar entre las partes
 
 A continuación, se describen los pasos para la creación de los
 certificados necesarios para implementar un demo de mTLS con
@@ -142,7 +142,7 @@ diferentes certificados creados para el cliente y el server
 1.  Crear el key de la CA.
 
 ```sh
-openssl genpkey -algorithm RSA -out **ca-key.pem**
+openssl genpkey -algorithm RSA -out ca-key.pem
 ```
 
 2.  Crear el certificado de la CA
@@ -275,12 +275,12 @@ server.ssl.enabled=true
 #Habilita la autenticación entre el cliente y el servidor
 server.ssl.client-auth=need
 #Define el keystore del server
-server.ssl.key-store=classpath:**server-keystore.p12**
+server.ssl.key-store=classpath:server-keystore.p12
 server.ssl.key-store-password=changeit
 server.ssl.key-store-type=PKCS12
 server.ssl.key-alias=server
 #Define el truststore del server
-server.ssl.trust-store=classpath:**server-truststore.p12**
+server.ssl.trust-store=classpath:server-truststore.p12
 server.ssl.trust-store-password=changeit
 ```
 ## Realizar la configuración de la infraestructura necesaria para la demo y ejecución del servicio de backend
