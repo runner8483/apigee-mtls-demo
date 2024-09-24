@@ -17,14 +17,9 @@ un certificado. En otras palabras, en una conexión mTLS:
 ### mTLS en Apigee
 
 En Apigee X las peticiones realizadas a través de un Apiproxy hacia un
-backend pueden ser divididas en dos partes, el tráfico que vienen desde
-los clientes hacia Apigee (Northbound) y el tráfico que parten desde
-Apigee hacia los backend services (Southbound).
+backend pueden ser divididas en dos partes, el tráfico que parte desde los clientes hacia Apigee (Northbound) y el tráfico que parte desde Apigee hacia los backend services (Southbound).
 
-En el siguiente demo ser realizara la implementación mTLS con un
-servicio backend como **southbound** significa que cada petición desde
-Apigee hacia el servicio debe cumplir con este proceso de doble
-validación de certificados.
+En el siguiente demo ser realizara la implementación mTLS **southbound** hacia un servicio backend, lo que significa que cada petición desde Apigee hacia el servicio debe cumplir con el proceso de doble validación de certificados.
 
 <img src="assets/diagrama-proyecto.png" style="width:8in;height:3in"
 alt="Imagen que contiene Tabla Descripción generada automáticamente" />
@@ -152,12 +147,9 @@ openssl req -x509 -new -nodes -key ca-key.pem -sha256 -days 365 -out ca-cert.pem
 **Certificados Backend (Servidor):** Creación de certificados y
 almacenes de parte del servidor.
 
-3.  Crear un **Subject Alternative Name** (Nombre Alternativo del
-    Sujeto) (SAN) para idenficar las IPs o DNS a los que se les generará
-    el certificado:
+3.  Crear un **Subject Alternative Name** (Nombre Alternativo del Sujeto) (SAN) para idenficar las IPs o DNS a los que se les generará el certificado:
 
-Crear el archivo archivo **san.cnf** (vim san.cnf) en incluir el
-siguiente contenido
+Crear el archivo archivo **san.cnf** (vim san.cnf) en incluir el siguiente contenido
 
 \[ req_distinguished_name \]<br>
 C = CO<br>
@@ -171,9 +163,7 @@ subjectAltName = @alt_names<br>
 \[ alt_names \]<br>
 IP.1 = 34.XX.XX.XX
 
-En este caso al ser un certificado autofirmado sin un DNS, se define la
-IP que se asigna a la VM (Esta IP debe ser modificado según
-corresponda). Este SAN será usado en los siguientes pasos.
+En este caso al ser un certificado autofirmado sin un DNS, se define la IP que se asigna a la VM (Esta IP debe ser modificado según corresponda). Este SAN será usado en los siguientes pasos.
 
 4.  Generar clave privada del servidor
 ```sh
@@ -198,13 +188,12 @@ keytool -importcert -file apigee-client-cert.pem -keystore server-truststore.p12
 
 keytool -import -alias ca -file ca-cert.pem -keystore server-truststore.p12 -storepass changeit
 ```
-**Certificados Apigee (cliente)**: Creación de certificados y almacenes
-de parte del cliente.
+**Certificados Apigee (cliente)**: Creación de certificados y almacenes de parte del cliente.
 
 9.  Generar clave privada para el cliente (Apigee)
-
+```sh
 openssl genpkey -algorithm RSA -out **apigee-client-key.pem**
-
+```
 10. Crear una solicitud de firma de certificado (CSR) para el cliente
 ```sh
 openssl req -new -key apigee-client-key.pem -out client.csr -subj "/C=CO/ST=Bogota/L=Bogota/O=DemomTLSCompany/OU=mTLS/CN=apigee-client"
@@ -213,13 +202,11 @@ openssl req -new -key apigee-client-key.pem -out client.csr -subj "/C=CO/ST=Bogo
 ```
 openssl x509 -req -in client.csr -CA ca-cert.pem -CAkey ca-key.pem -CAcreateserial -out apigee-client-cert.pem -days 365 -sha256
 ```
-12. Crear un almacén de confianza para el servidor para confiar en el
-    certificado del cliente
+12. Crear un almacén de confianza para el servidor para confiar en el certificado del cliente
 ```sh
 openssl pkcs12 -export -in apigee-client-cert.pem -inkey apigee-client-key.pem -out client-apigee-keystore.p12 -name client -password pass:changeit
 ```
-**Resultado:** Cómo resultado de este paso se deben obtener los
-siguientes archivos:
+**Resultado:** Cómo resultado de este paso se deben obtener los siguientes archivos:
 
 - apigee-client-cert.pem
 
@@ -254,18 +241,15 @@ alt="Interfaz de usuario gráfica, Diagrama, Aplicación Descripción generada a
 
 *Configuración requerida en cliente y servidor*
 
-Una vez creados los certificados se procede a la creación del MS y
-configuración en Apigee.
+Una vez creados los certificados se procede a la creación del MS y configuración en Apigee.
 
 ## Construcción del Microservicio en Spring boot
 
-Se crea un servicio básico en Spring boot “**ms-mtls-demo**” del cual se
-puede encontrar el código en este repositorio.
+Se crea un servicio básico en Spring boot “**ms-mtls-demo**” del cual se puede encontrar el código en este repositorio.
 
 Este servicio expone una única operación GET en el controlador.
 
-Para habilitar la autenticación mTLS se realiza la siguiente definición
-en el archivo application.propeties
+Para habilitar la autenticación mTLS se realiza la siguiente definición en el archivo application.propeties
 
 ```conf
 #Habilita el puerto 8443 para la comunicación TLS
@@ -285,42 +269,29 @@ server.ssl.trust-store-password=changeit
 ```
 ## Realizar la configuración de la infraestructura necesaria para la demo y ejecución del servicio de backend
 
-Para realizar el despliegue del servicio se crea una VM con una imagen
-de Ubuntu 20 que permita la ejecución de la aplicación java que reciba
-las peticiones por el puerto 8443.
+Para realizar el despliegue del servicio se crea una VM con una imagen de Ubuntu 20 que permita la ejecución de la aplicación java que reciba las peticiones por el puerto 8443.
 
 Configuraciones requeridas:
 
-- Creación de regla de firewall sobre la etiqueta de red creada para
-  permitir el tráfico por el puerto 8443
+- Creación de regla de firewall sobre la etiqueta de red creada para permitir el tráfico por el puerto 8443
 
-- Actualización de los paquetes de Ubuntu: sudo apt update
+- Actualización de los paquetes de Ubuntu: ```sh sudo apt update```
 
-- Instalación de java 17 (openJDK17): sudo apt-get install
-  openjdk-17-jdk
+- Instalación de java 17 (openJDK17): ```sh sudo apt-get install openjdk-17-jdk```
 
-- Instalación de Maven: sudo apt install maven
+- Instalación de Maven: ```sh sudo apt install maven```
 
-- Clonar el proyecto: git clone ….
+- Clonar el proyecto: ```sh git clone https://github.com/runner8483/apigee-mtls-demo.git```
 
-- Ejecutar la creación del archivo jar: mvn clean install
+- Ejecutar la creación del archivo jar: ```sh mvn clean install```
 
-- Ejecutar la aplicación: java -jar
-  target/ms-mtls-demo-1.0.0-SNAPSHOT.jar
+- Ejecutar la aplicación: ```sh java -jar target/ms-mtls-demo-1.0.0-SNAPSHOT.jar```
 
-En este caso en el “server” se almacenan el keystore
-(**server-keystore.p12**) con el certificado y key del servidor lo que
-habilitará la conexión TLS mediante HTTP y se almacena el truststore
-(**server-truststore.p12**) el cual contiene el certificado del cliente
-y la CA, esto permite validar contra estos el certificado enviado por el
-cliente en el momento del handshake requerido por la autenticación
-mutua.
+En este caso en el “server” se deben almacenar los certificados generados en el keystore (**server-keystore.p12**) con el certificado y key del servidor, lo que habilitará la conexión TLS mediante HTTP y se debe almacenar el truststore (**server-truststore.p12**) el cual contiene el certificado del cliente y la CA, esto permite validar contra estos el certificado enviado por el cliente en el momento del handshake requerido por la autenticación mutua. Estos archivos se deben guardar en la carpeta resources del proyecto para el caso de este demo. En caso de despliegue de un servicio como contenedor, estos archivos deben ser almacenados como un secreto o en un key vault según la arquitectura del proyecto.
 
-Una vez realizada esta configuración y ejecución el servicio estará
-escuchando las peticiones por el puerto 8443.
+Una vez realizada esta configuración y ejecución el servicio estará escuchando las peticiones por el puerto 8443.
 
-Para realizar las pruebas y validaciones de la autenticación de mTLS en
-este punto podemos valernos del comando curl.
+Para realizar las pruebas y validaciones de la autenticación de mTLS en este punto podemos valernos del comando curl.
 
 Ejecutando el siguiente comando se puede validar la autenticación mTLS:
 
