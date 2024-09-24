@@ -188,6 +188,14 @@ keytool -importcert -file apigee-client-cert.pem -keystore server-truststore.p12
 
 keytool -import -alias ca -file ca-cert.pem -keystore server-truststore.p12 -storepass changeit
 ```
+
+## Crear secret con los certificados (k8s)
+```sh
+kubectl create secret generic ssl-trustore --from-file=server-truststore.p12
+kubectl create secret generic ssl-keystore --from-file=server-keystore.p12
+```
+
+
 **Certificados Apigee (cliente)**: Creación de certificados y almacenes de parte del cliente.
 
 9.  Generar clave privada para el cliente (Apigee)
@@ -428,6 +436,48 @@ curl -v --cert apigee-client-cert.pem --key apigee-client-key.pem --cacert ca-ce
 ```
 De esta manera se prueban los diferentes escenarios de autenticación
 directa contra el servicio de backend.
+
+## Despliegue en k8s
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ssl-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ssl-demo
+  template:
+    metadata:
+      labels:
+        app: ssl-demo
+    spec:
+      containers:
+      - name: ssl-demo
+        image: ssl-demo:latest
+        ports:
+        - containerPort: 8443
+        volumeMounts:
+        - name: ssl-certs-trustore
+          mountPath: /etc/ssl/certs/trustore.p12
+          subPath: trustore.p12
+          readOnly: true
+        - name: ssl-certs-keystore
+          mountPath: /etc/ssl/certs/keystore.p12
+          subPath: keystore.p12
+          readOnly: true
+      volumes:
+      - name: ssl-certs-trustore
+        secret:
+          secretName: ssl-trustore
+      - name: ssl-certs-keystore
+        secret:
+          secretName: ssl-keystore
+
+```
+
 
 ## Crear el proxy en Apigee
 
